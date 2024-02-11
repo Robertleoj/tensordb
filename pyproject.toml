@@ -4,12 +4,10 @@ version = "0.1.0"
 description = ""
 authors = ["Robert Leo <robert.leo.jonsson@gmail.com>"]
 readme = "README.md"
-packages = [{include = "project", from = "src"}]
+packages = [{include = "tensordb", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "3.10.*"
-fire = "^0.5.0"
-tyro = "^0.6.0"
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^3.6.2"
@@ -22,11 +20,12 @@ myst-parser = "^1.0.0"
 pytest = "^7.2.2"
 jupytext = "^1.14.5"
 sybil = "^5.0.3"
+fire = "^0.5.0"
+tyro = "^0.6.0"
 
 
 [tool.poetry.group.third_party.dependencies]
 munkres = "1.1.4"
-ffmpeg = "^1.4"
 
 [tool.ruff]
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.

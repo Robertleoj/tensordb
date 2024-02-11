@@ -1,4 +1,4 @@
-from project.utils.example import example_util
+from tensordb.utils.example import example_util
 
 
 def test_example_util() -> None:

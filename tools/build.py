@@ -11,7 +11,7 @@ from fire import Fire
 
 BUILD_DIR = "build"
 
-MODULE_NAME = "foundation.cpython-310-x86_64-linux-gnu.so"
+MODULE_NAME = "tensordb_cpp.cpython-310-x86_64-linux-gnu.so"
 
 
 def has_executable(path):
@@ -56,20 +56,15 @@ def build() -> None:
     subprocess.run(["ninja", "-C", str(build_path)])
 
     # Make sure that target was built
-    target_path = build_path / "src" / "project" / "foundation" / MODULE_NAME
+    target_path = build_path / "src" / "tensordb" / "tensordb_cpp" / MODULE_NAME
     assert target_path.exists()
 
     # Replace or create symlink
-    deploy_path = Path("src/project") / MODULE_NAME
+    deploy_path = Path("src/tensordb") / MODULE_NAME
     if deploy_path.is_symlink():
         deploy_path.unlink()
 
     deploy_path.symlink_to(target_path.resolve())
-
-    cpp_script_path = build_path / "cpp_scripts"
-    cpp_executables_path = Path("cpp_executables")
-
-    symlink_executables(cpp_script_path, cpp_executables_path)
 
 
 def clean() -> None:
@@ -79,7 +74,7 @@ def clean() -> None:
     shutil.rmtree("cpp_executables", ignore_errors=True)
 
     # Remove the symlink, if any
-    deploy_path = Path(f"src/project/{MODULE_NAME}")
+    deploy_path = Path(f"src/tensordb/{MODULE_NAME}")
     if deploy_path.is_symlink():
         deploy_path.unlink()
 

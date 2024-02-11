@@ -15,7 +15,7 @@
 # ---
 
 # %%
-from project.foundation import add
+from tensordb.foundation import add
 
 # %%
 add(5, 6)
