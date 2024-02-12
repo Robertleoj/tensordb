@@ -11,6 +11,17 @@ COLLECTIONS_TABLE_NAME = Config.config.reserved_table_names.collections
 
 
 class Database:
+    # The directory where the database is stored
+    __db_dir: Path
+
+    __db_name: str
+
+    # Where the sqlite3 database is stored
+    __sqlite_db_path: Path
+
+    # The connection to the database
+    __connection: sqlite3.Connection
+
     def __init__(self, db_name: str, base_path: Path | None = None) -> None:
         """Create a new TorchDB database.
 
@@ -24,7 +35,7 @@ class Database:
         self.__db_name = db_name
 
         if not self.__db_dir.exists():
-            self.__db_dir_path.mkdir(parents=True)
+            self.__db_dir.mkdir(parents=True)
             logger.info(f"Creating new database at {self.__db_dir}")
         else:
             logger.info(f"Loading existing database at {self.__db_dir}")
@@ -38,22 +49,26 @@ class Database:
         """
         return f"Database(name={self.__db_name})"
 
+    def __initialize_connection(self) -> None:
+        """Initialize the connection to the database."""
+        self.__connection = sqlite3.connect(self.__sqlite_db_path)
+
     def __initialize_db(self) -> None:
         """Initialize a new database."""
-        self.__connection = sqlite3.connect(self.__sqlite_db_path)
+        self.__initialize_connection()
+
         cursor = self.__connection.cursor()
 
         cursor.execute(
-            """
-            create table if not exists ? (
+            f"""
+            create table if not exists {COLLECTIONS_TABLE_NAME} (
                 id integer primary key,
                 name text
             )
-        """,
-            (COLLECTIONS_TABLE_NAME,),
+        """
         )
 
-        cursor.commit()
+        self.__connection.commit()
 
     @property
     def location(self) -> Path:

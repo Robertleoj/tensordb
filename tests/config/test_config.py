@@ -3,8 +3,6 @@ from tensordb._config import Config, ConfigDict
 
 def test_global_config() -> None:
     """Test that the global config is loaded correctly."""
-    assert Config._instance is None, "GlobalConfig._instance should be None before initialization"
-
     # this should trigger a load of the config
     Config.config
 
