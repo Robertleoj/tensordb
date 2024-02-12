@@ -1,0 +1,4 @@
+
+[reserved_table_names]
+collections = "__collections__"
+collection_tensor_fields = "__collection_tensor_fields__"

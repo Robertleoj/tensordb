@@ -1,4 +1,4 @@
-from tensordb.foundation import add
+from tensordb._tensordb_cpp import add
 
 
 def test_add() -> None:

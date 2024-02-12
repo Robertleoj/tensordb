@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "project"
+name = "tendordb"
 version = "0.1.0"
 description = ""
 authors = ["Robert Leo <robert.leo.jonsson@gmail.com>"]
@@ -8,6 +8,8 @@ packages = [{include = "tensordb", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "3.10.*"
+mypy = "^1.8.0"
+flags = "^0.0.1.2"
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^3.6.2"
@@ -94,7 +96,9 @@ testpaths = ["tests", "src/project/utils"]
 # we use Sybil to find doctests.
 # by default, don't run end_to_end_workstation tests
 addopts = "-p no:doctest --strict-markers"
-markers = []
+markers = [
+  "disk_io: tests that require disk io",
+]
 
 [build-system]
 requires = ["poetry-core"]

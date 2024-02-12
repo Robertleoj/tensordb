@@ -1,4 +1,4 @@
-#include "../../../include/foundation/example.hpp"
+#include "../../../include/_tensordb_cpp/example.hpp"
 #include <nanobind/nanobind.h>
 
 // NOTE: This sets compile time level. In addition, you need to set the
@@ -11,19 +11,15 @@
 namespace nb = nanobind;
 using namespace nb::literals;
 
-using namespace foundation;
+using namespace tensordb;
 
-NB_MODULE(foundation, m) {
+NB_MODULE(_tensordb_cpp, m) {
   m.doc() = R"pbdoc(
-        Bindings to the foundation.
-        ---------------------------
+        Bindings to the cpp code for TensorDB
+        -------------------------------------
     )pbdoc";
 
   m.def(
       "set_spdlog_level", [](const std::string &level) { spdlog::set_level(spdlog::level::from_str(level)); },
       "Set spd log level. Supported levels are: trace, debug, info, warn, error, critical, off.");
-
-  m.def("add", add, "Add two numbers", "a"_a, "b"_a, R"pbdoc(
-        Add two numbers
-  )pbdoc");
 }

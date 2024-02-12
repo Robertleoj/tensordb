@@ -10,3 +10,6 @@
 [submodule "external/nanobind"]
 	path = external/nanobind
 	url = https://github.com/wjakob/nanobind
+[submodule "external/SQLiteCpp"]
+	path = external/SQLiteCpp
+	url = https://github.com/SRombauts/SQLiteCpp

@@ -198,4 +198,3 @@ See also https://www.atlassian.com/git/tutorials/git-forks-and-upstreams
 We support the [`Tracy`](https://github.com/wolfpld/tracy) profiler.
 To enable the profiler set the `TRACY_ENABLE` CMake flag in the top level `CMakeLists.txt` to `ON`.
 Please refer to the `Tracy` documentation for details on how to build and use the profiler.
-

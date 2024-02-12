@@ -5,85 +5,82 @@
 import os
 import shutil
 import subprocess
+from functools import partial
 from pathlib import Path
 
 from fire import Fire
 
 BUILD_DIR = "build"
 
-MODULE_NAME = "tensordb_cpp.cpython-310-x86_64-linux-gnu.so"
-
-
-def has_executable(path):
-    for item in path.rglob("*"):
-        if item.is_file() and os.access(item, os.X_OK):
-            return True
-    return False
-
-
-def symlink_executables(source_dir, target_dir):
-    source_dir = Path(source_dir).resolve()
-    target_dir = Path(target_dir).resolve()
-
-    shutil.rmtree(target_dir, ignore_errors=True)
-
-    if not source_dir.is_dir():
-        raise ValueError("Source directory does not exist or is not a directory")
-
-    for item in source_dir.rglob("*"):
-        if item.is_dir() and has_executable(item):
-            (target_dir / item.relative_to(source_dir)).mkdir(parents=True, exist_ok=True)
-        elif item.is_file() and os.access(item, os.X_OK):
-            target_item = target_dir / item.relative_to(source_dir)
-            target_item.parent.mkdir(parents=True, exist_ok=True)
-            target_item.symlink_to(item)
+PACKAGE_NAME = "tensordb"
+CPP_PACKAGE_NAME = "_tensordb_cpp"
+MODULE_NAME = f"{CPP_PACKAGE_NAME}.cpython-310-x86_64-linux-gnu.so"
 
 
 def check_in_repo() -> None:
     """Check that we are executing this from repo root."""
-    assert Path(".git").exists(), "This command should run in repo root."
+    assert Path("pyproject.toml").exists(), "This command should run in repo root."
 
 
-def build() -> None:
+def build(debug: bool = False) -> None:
     """(Re)build the C++ backend."""
     check_in_repo()
 
     build_path = Path("build")
     build_path.mkdir(exist_ok=True)
 
-    subprocess.run(["cmake", "-B", str(build_path), "-G", "Ninja"], check=True)
+    cmake_cmd = ["cmake", "-B", str(build_path)]
+    if debug:
+        cmake_cmd += ["-DCMAKE_BUILD_TYPE=Debug"]
+
+    cmake_cmd += ["-G", "Ninja"]
+
+    subprocess.run(cmake_cmd, check=True)
 
     subprocess.run(["ninja", "-C", str(build_path)])
 
     # Make sure that target was built
-    target_path = build_path / "src" / "tensordb" / "tensordb_cpp" / MODULE_NAME
+    target_path = build_path / "src" / PACKAGE_NAME / CPP_PACKAGE_NAME / MODULE_NAME
+    print(target_path)
     assert target_path.exists()
 
     # Replace or create symlink
-    deploy_path = Path("src/tensordb") / MODULE_NAME
+    deploy_path = Path("src") / PACKAGE_NAME / MODULE_NAME
     if deploy_path.is_symlink():
         deploy_path.unlink()
 
     deploy_path.symlink_to(target_path.resolve())
+
+    subprocess.run(
+        ["stubgen", "-p", CPP_PACKAGE_NAME, "-o", f"./src/{PACKAGE_NAME}", "--include-docstring"],
+        env=dict(os.environ, PYTHONPATH=f"./src/{PACKAGE_NAME}"),
+    )
 
 
 def clean() -> None:
     """Clean the build folder and remove the symlink, if any."""
     check_in_repo()
     shutil.rmtree(BUILD_DIR, ignore_errors=True)
-    shutil.rmtree("cpp_executables", ignore_errors=True)
 
     # Remove the symlink, if any
-    deploy_path = Path(f"src/tensordb/{MODULE_NAME}")
+    deploy_path = Path(f"src/{PACKAGE_NAME}/{MODULE_NAME}")
     if deploy_path.is_symlink():
         deploy_path.unlink()
 
 
-def clean_build() -> None:
-    """First clean and then build."""
+def clean_build(debug: bool = False):
+    """Clean the build folder and remove the symlink, if any."""
     clean()
-    build()
+    build(debug=debug)
 
 
 if __name__ == "__main__":
-    Fire({"build": build, "clean": clean, "clean_build": clean_build})
+    Fire(
+        {
+            "build": build,
+            "build_debug": partial(build, debug=True),
+            "clean": clean,
+            "clean_build": clean_build,
+            "clean_build_debug": partial(clean_build, debug=True),
+        }
+    )
