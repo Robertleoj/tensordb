@@ -4,6 +4,9 @@ from pathlib import Path
 
 from tensordb._config import Config
 from tensordb._database.paths import get_database_path
+from typing import Type
+from tensordb.fields import Field
+from tensordb._utils.naming import check_name_valid
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +44,33 @@ class Database:
             logger.info(f"Loading existing database at {self.__db_dir}")
 
         self.__initialize_db()
+
+    def create_collection(self, name: str, fields: dict[str, Type | Field]) -> None:
+        """Create a new collection in this database.
+        
+        Args:
+            name: The name of the collection
+            fields: Mapping from field name to field type.
+
+        Returns:
+            collection: The newly created collection.
+        """
+        assert check_name_valid(name), f"{name} is not a valid name"
+
+        # TODO: continue here
+        
+
+    def get_collection(self, name: str) -> None:
+        """Get a collection by name.
+
+        Args:
+            name: The name of the collection.
+
+        Returns:
+            collection: The collection with the given name.
+        """
+        pass
+
 
     def __repr__(self) -> str:
         """Returns a string representation of the database.
