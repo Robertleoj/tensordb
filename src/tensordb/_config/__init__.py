@@ -1,3 +1,3 @@
-from tensordb._config.global_config import Config, ConfigDict
+from tensordb._config.global_config import CONFIG
 
-__all__ = ["Config", "ConfigDict"]
+__all__ = ["CONFIG"]
