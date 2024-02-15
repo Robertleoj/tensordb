@@ -6,6 +6,9 @@ from tensordb.fields import Field
 
 
 class Collection:
+    __name: str
+    __fields: dict[str, Type | Field]
+
     def __init__(
         self,
         name: str,
@@ -21,10 +24,15 @@ class Collection:
         """
         assert check_name_valid(name), f"{name} is not a valid name"
 
-        if fields is None:
-            # Get the collection
+        if fields is not None:
             backend.create_collection(name, fields)
-
         else:
-            # Create a new collection
-            pass
+            assert backend.collection_exists(name), f"Collection {name} does not exist"
+
+        self.__name = name
+        # TODO: assign fields
+
+    @property
+    def name(self) -> str:
+        """The name of the collection."""
+        return self.__name

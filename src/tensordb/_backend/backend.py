@@ -2,9 +2,12 @@ import sqlite3
 from pathlib import Path
 from typing import Type
 
+import msgpack
+import numpy as np
+
 from tensordb._config import CONFIG
 from tensordb._utils.naming import check_name_valid
-from tensordb.fields import Field
+from tensordb.fields import Field, TensorField
 
 
 class Backend:
@@ -19,9 +22,14 @@ class Backend:
     __sqlite_db_path: Path
     __connection: sqlite3.Connection
 
-    def __init__(self, dir: Path):
+    def __init__(self, dir: Path) -> None:
+        """Initialize a new Backend.
+
+        Args:
+            dir: The directory where the database is stored.
+        """
         self.dir = dir
-        self.__sqlite_db_path = self.__db_dir / "db.db"
+        self.__sqlite_db_path = self.dir / "db.db"
         self.__connection = sqlite3.connect(self.__sqlite_db_path)
         self.__initialize_db()
 
@@ -64,6 +72,7 @@ class Backend:
             create table if not exists {table_name} (
                 id integer primary key,
                 collection_id integer,
+                field_name text,
                 dtype text,
                 shape blob
             )
@@ -85,6 +94,20 @@ class Backend:
             raise ValueError(f"Collection {name} already exists")
 
         self.__insert_collection(name, cursor)
+        self.__insert_collection_fields(name, fields, cursor)
+
+        self.__connection.commit()
+
+    def collection_exists(self, name: str) -> bool:
+        """Check if a collection exists.
+
+        Args:
+            name: The name of the collection.
+
+        Returns:
+            exists: Whether the collection exists.
+        """
+        return self.__collection_exists(name)
 
     def __insert_collection_fields(
         self, collection_id: int, fields: dict[str, Type | Field], cursor: sqlite3.Cursor | None = None
@@ -100,7 +123,21 @@ class Backend:
         if cursor is None:
             cursor = self.__connection.cursor()
 
-        # TODO: Implement this
+        table_name = CONFIG.reserved_table_names.collection_tensor_fields
+        insert_template = f"""
+            insert into {table_name} (collection_id, field_name, dtype, shape)
+            values
+            (?, ?, ?, ?)
+        """
+
+        for field_name, field_type in fields.items():
+            if isinstance(field_type, TensorField):
+                cursor.execute(
+                    insert_template,
+                    (collection_id, field_name, np.dtype(field_type.dtype).name, msgpack.packb(field_type.shape)),
+                )
+
+        self.__connection.commit()
 
     def __insert_collection(self, name: str, cursor: sqlite3.Cursor | None = None) -> int:
         """Insert a collection into the collections table.
@@ -153,4 +190,5 @@ class Backend:
             (name,),
         )
 
-        return cursor.fetchall() is not None
+        result = cursor.fetchall()
+        return len(result) > 0
