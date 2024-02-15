@@ -5,6 +5,7 @@ from typing import Type
 import msgpack
 import numpy as np
 
+from tensordb._backend.sql_types import TYPE_TO_SQL_TYPE
 from tensordb._config import CONFIG
 from tensordb._utils.naming import check_name_valid
 from tensordb.fields import Field, TensorField
@@ -74,7 +75,8 @@ class Backend:
                 collection_id integer,
                 field_name text,
                 dtype text,
-                shape blob
+                shape blob,
+                unique(collection_id, field_name)
             )
         """
         )
@@ -88,15 +90,85 @@ class Backend:
         """
         assert check_name_valid(name), f"{name} is not a valid collection name"
 
+        for field_name, field_type in fields.items():
+            assert check_name_valid(field_name), f"{field_name} is not a valid field name"
+
         cursor = self.__connection.cursor()
 
         if self.__collection_exists(name, cursor):
             raise ValueError(f"Collection {name} already exists")
 
+        self.__create_collection_table(name, fields, cursor)
         self.__insert_collection(name, cursor)
         self.__insert_collection_fields(name, fields, cursor)
 
         self.__connection.commit()
+
+    def get_colleciton_fields(self, name: str) -> dict[str, Type | Field]:
+        """Get the fields of a collection.
+
+        Args:
+            name: The name of the collection.
+
+        Returns:
+            fields: Mapping from field name to field type.
+        """
+        cursor = self.__connection.cursor()
+
+        cursor.execute(
+            f"""
+            select 
+                field_name, 
+                dtype, 
+                shape 
+            from 
+                {CONFIG.reserved_table_names.collection_tensor_fields}
+            where collection_id = (
+                select id from {CONFIG.reserved_table_names.collections}
+                where name = ?
+            )
+        """,
+            (name,),
+        )
+
+        fields = {}
+        for field_name, dtype, shape in cursor.fetchall():
+            if shape is None:
+                fields[field_name] = TYPE_TO_SQL_TYPE[dtype]
+            else:
+                fields[field_name] = TensorField(dtype=dtype, shape=msgpack.unpackb(shape))
+
+        return fields
+
+    def __create_collection_table(self, name: str, fields: dict[str, Type | Field], cursor: sqlite3.Cursor) -> None:
+        """Create the table for the collection.
+
+        Args:
+            name: The name of the collection.
+            fields: Mapping from field name to field type.
+            cursor: The cursor to use to execute the command.
+        """
+        query_template = f"""
+            create table if not exists {name} (
+                {{field_list}}
+            )
+        """
+
+        query_field_list = [
+            "id integer primary key",
+        ]
+
+        for field_name, field_type in fields.items():
+            if isinstance(field_type, TensorField):
+                query_field_list.append(f"{field_name} text")
+            else:
+                assert field_type in TYPE_TO_SQL_TYPE, f"Unsupported type: {field_type}"
+                sql_type = TYPE_TO_SQL_TYPE[field_type]
+                query_field_list.append(f"{field_name} {sql_type}")
+
+        query = query_template.format(field_list=",\n".join(query_field_list))
+
+        cursor.execute(query)
 
     def collection_exists(self, name: str) -> bool:
         """Check if a collection exists.

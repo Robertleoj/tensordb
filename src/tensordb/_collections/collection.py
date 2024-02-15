@@ -6,6 +6,8 @@ from tensordb.fields import Field
 
 
 class Collection:
+    """A collection of data."""
+
     __name: str
     __fields: dict[str, Type | Field]
 
