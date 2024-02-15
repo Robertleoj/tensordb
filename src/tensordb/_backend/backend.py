@@ -99,12 +99,12 @@ class Backend:
             raise ValueError(f"Collection {name} already exists")
 
         self.__create_collection_table(name, fields, cursor)
-        self.__insert_collection(name, cursor)
-        self.__insert_collection_fields(name, fields, cursor)
+        collection_id = self.__insert_collection(name, cursor)
+        self.__insert_collection_fields(collection_id, fields, cursor)
 
         self.__connection.commit()
 
-    def get_colleciton_fields(self, name: str) -> dict[str, Type | Field]:
+    def get_collection_fields(self, name: str) -> dict[str, Type | Field]:
         """Get the fields of a collection.
 
         Args:
@@ -114,31 +114,52 @@ class Backend:
             fields: Mapping from field name to field type.
         """
         cursor = self.__connection.cursor()
+        tensor_fields = self.__get_collection_tensor_fields(name, cursor)
+        print(tensor_fields)
 
+        all_fields = self.__get_collection_fields(name, cursor)
+
+        all_fields.update(tensor_fields)
+
+        return all_fields
+
+    def __get_collection_fields(self, name: str, cursor: sqlite3.Cursor) -> dict[str, str]:
         cursor.execute(
             f"""
-            select 
-                field_name, 
-                dtype, 
-                shape 
-            from 
+            pragma table_info({name})
+        """
+        )
+
+        fields = {}
+        for row in cursor.fetchall():
+            field_name = row[1]
+            field_type = row[2]
+            fields[field_name] = field_type
+
+        return fields
+
+    def __get_collection_tensor_fields(self, collection_name: str, cursor: sqlite3.Cursor) -> dict[str, TensorField]:
+        cursor.execute(
+            f"""
+            select
+                field_name,
+                dtype,
+                shape
+            from
                 {CONFIG.reserved_table_names.collection_tensor_fields}
             where collection_id = (
                 select id from {CONFIG.reserved_table_names.collections}
                 where name = ?
             )
         """,
-            (name,),
+            (collection_name,),
         )
 
-        fields = {}
+        tensor_fields = {}
         for field_name, dtype, shape in cursor.fetchall():
-            if shape is None:
-                fields[field_name] = TYPE_TO_SQL_TYPE[dtype]
-            else:
-                fields[field_name] = TensorField(dtype=dtype, shape=msgpack.unpackb(shape))
+            tensor_fields[field_name] = TensorField(dtype=np.dtype(dtype), shape=tuple(msgpack.unpackb(shape)))
 
-        return fields
+        return tensor_fields
 
     def __create_collection_table(self, name: str, fields: dict[str, Type | Field], cursor: sqlite3.Cursor) -> None:
         """Create the table for the collection.
@@ -182,7 +203,10 @@ class Backend:
         return self.__collection_exists(name)
 
     def __insert_collection_fields(
-        self, collection_id: int, fields: dict[str, Type | Field], cursor: sqlite3.Cursor | None = None
+        self,
+        collection_id: int,
+        fields: dict[str, Type | Field],
+        cursor: sqlite3.Cursor | None = None,
     ) -> None:
         """Insert the fields of a collection into the collection_tensor_fields table.
 

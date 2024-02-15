@@ -30,3 +30,5 @@ def test_database_collection(tmp_path: Path) -> None:  # noqa: D103
     assert collection.name == collection_name, "The collection name is not correct"
 
     collection = db.collection(collection_name)
+
+    assert collection.name == collection_name, "The collection name is not correct"
