@@ -9,6 +9,7 @@ from functools import partial
 from pathlib import Path
 
 from fire import Fire
+from generate_config import build_config
 
 BUILD_DIR = "build"
 
@@ -25,6 +26,7 @@ def check_in_repo() -> None:
 def build(debug: bool = False) -> None:
     """(Re)build the C++ backend."""
     check_in_repo()
+    build_config()
 
     build_path = Path("build")
     build_path.mkdir(exist_ok=True)
