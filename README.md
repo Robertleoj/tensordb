@@ -41,7 +41,7 @@ my_collection = db.collection(
     "my_collection",
     fields={
         "name": str,
-        "tensor", tdb.TensorField(dtype=tdb.float, shape=(None, 3))
+        "tensor", tdb.fields.TensorField(dtype=tdb.float, shape=(None, 3))
     }
 )
 ```
