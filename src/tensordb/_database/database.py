@@ -59,6 +59,10 @@ class Database:
 
         return Collection(name=name, backend=self.__backend, fields=fields)
 
+    def collections(self) -> list[str]:
+        """Return a list of all the collections in the database."""
+        return self.__backend.get_collection_names()
+
     def __repr__(self) -> str:
         """Returns a string representation of the database.
 

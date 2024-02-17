@@ -9,7 +9,7 @@ class Collection:
     """A collection of data."""
 
     __name: str
-    __fields: dict[str, Type | Field]
+    __backend: Backend
 
     def __init__(
         self,
@@ -26,13 +26,18 @@ class Collection:
         """
         assert check_name_valid(name), f"{name} is not a valid name"
 
+        self.__backend = backend
+
         if fields is not None:
-            backend.create_collection(name, fields)
+            self.__backend.create_collection(name, fields)
         else:
-            assert backend.collection_exists(name), f"Collection {name} does not exist"
+            assert self.__backend.collection_exists(name), f"Collection {name} does not exist"
 
         self.__name = name
-        # TODO: assign fields
+
+    @property
+    def fields(self) -> dict[str, Type | Field]:
+        return self.__backend.get_collection_fields(self.__name)
 
     @property
     def name(self) -> str:

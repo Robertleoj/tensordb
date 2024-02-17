@@ -5,7 +5,7 @@ from typing import Type
 import msgpack
 import numpy as np
 
-from tensordb._backend.sql_types import TYPE_TO_SQL_TYPE
+from tensordb._backend.sql_types import SQL_TYPE_TO_TYPE, TYPE_TO_SQL_TYPE
 from tensordb._config import CONFIG
 from tensordb._utils.naming import check_name_valid
 from tensordb.fields import Field, TensorField
@@ -90,8 +90,11 @@ class Backend:
         """
         assert check_name_valid(name), f"{name} is not a valid collection name"
 
-        for field_name, field_type in fields.items():
+        for field_name in fields.keys():
             assert check_name_valid(field_name), f"{field_name} is not a valid field name"
+
+        if "id" in fields:
+            raise ValueError("id is a reserved field name")
 
         cursor = self.__connection.cursor()
 
@@ -117,16 +120,25 @@ class Backend:
         tensor_fields = self.__get_collection_tensor_fields(name, cursor)
         print(tensor_fields)
 
-        all_fields = self.__get_collection_fields(name, cursor)
+        all_fields = self.__get_table_fields(name, cursor)
+
+        for key, value in all_fields.items():
+            all_fields[key] = SQL_TYPE_TO_TYPE[value]
 
         all_fields.update(tensor_fields)
 
         return all_fields
 
-    def __get_collection_fields(self, name: str, cursor: sqlite3.Cursor) -> dict[str, str]:
+    def __get_table_fields(self, table_name: str, cursor: sqlite3.Cursor) -> dict[str, str]:
+        """Get the fields of a table.
+
+        Args:
+            table_name: The name of the table.
+            cursor: The cursor to use to execute the command.
+        """
         cursor.execute(
             f"""
-            pragma table_info({name})
+            pragma table_info({table_name})
         """
         )
 
@@ -288,3 +300,19 @@ class Backend:
 
         result = cursor.fetchall()
         return len(result) > 0
+
+    def get_collection_names(self) -> list[str]:
+        """Get the names of all the collections.
+
+        Returns:
+            names: The names of all the collections.
+        """
+        cursor = self.__connection.cursor()
+
+        cursor.execute(
+            f"""
+            select name from {CONFIG.reserved_table_names.collections}
+        """
+        )
+
+        return [row[0] for row in cursor.fetchall()]
