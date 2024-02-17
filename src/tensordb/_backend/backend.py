@@ -32,7 +32,11 @@ class Backend:
         self.dir = dir
         self.__sqlite_db_path = self.dir / "db.db"
         self.__connection = sqlite3.connect(self.__sqlite_db_path)
-        db.initialize_db(self.__connection)
+
+        cursor = self.__connection.cursor()
+        db.create_collections_table(cursor)
+        db.create_collection_tensor_fields_table(cursor)
+        self.__connection.commit()
 
     def create_collection(self, name, fields: dict[str, Type | Field]) -> None:
         """Create a new collection.

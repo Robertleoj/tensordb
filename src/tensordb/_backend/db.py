@@ -3,17 +3,7 @@ import sqlite3
 from tensordb._config import CONFIG
 
 
-def initialize_db(connection: sqlite3.Connection) -> None:
-    """Initialize the database."""
-    cursor = connection.cursor()
-
-    __create_collections_table(cursor)
-    __create_collection_tensor_fields_table(cursor)
-
-    connection.commit()
-
-
-def __create_collections_table(cursor: sqlite3.Cursor) -> None:
+def create_collections_table(cursor: sqlite3.Cursor) -> None:
     """Create the collections table.
 
     Args:
@@ -31,7 +21,7 @@ def __create_collections_table(cursor: sqlite3.Cursor) -> None:
     )
 
 
-def __create_collection_tensor_fields_table(cursor: sqlite3.Cursor) -> None:
+def create_collection_tensor_fields_table(cursor: sqlite3.Cursor) -> None:
     """Create the collection tensor fields table.
 
     Args:
