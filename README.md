@@ -32,10 +32,10 @@ If a database with the same name already exists, it will be loaded - otherwise a
 
 You can optionally provide a path to the database, and a path to the tensor storage. If not provided, the database will be created in a caching directory.
 
-To create a collection, you can use the `create_collection` method:
+To create a collection, you can use the `collection` method:
 
 ```python
-my_collection = db.create_collection(
+my_collection = db.collection(
     "my_collection",
     fields={
         "name": str,
@@ -43,11 +43,11 @@ my_collection = db.create_collection(
     }
 )
 ```
-An ID column named `id` is automatically created, with a unique identifier for each row.
+An ID column named `id` is automatically created, with a unique identifier for each row. 
 
-To get the collection later, you can use
+To get the collection later, you can invoke the same method without the `fields` argument:
 ```python
-my_collection = db.get_collection("my_collection")
+my_collection = db.collection("my_collection")
 ```
 
 ### Inserting data
