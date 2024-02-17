@@ -1,4 +1,4 @@
-#include "../../../include/_tensordb_cpp/example.hpp"
+#include "../../../include/tensordb_cpp/example.hpp"
 #include <nanobind/nanobind.h>
 
 // NOTE: This sets compile time level. In addition, you need to set the
@@ -13,7 +13,7 @@ using namespace nb::literals;
 
 using namespace tensordb;
 
-NB_MODULE(_tensordb_cpp, m) {
+NB_MODULE(tensordb_cpp, m) {
   m.doc() = R"pbdoc(
         Bindings to the cpp code for TensorDB
         -------------------------------------

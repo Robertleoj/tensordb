@@ -1,8 +1,9 @@
 from typing import Any, Type
 
-from tensordb._backend import Backend
-from tensordb._utils.naming import check_name_valid
+from tensordb.collections.functions import collection_exists, create_collection, get_collection_fields, insert_data
 from tensordb.fields import Field
+from tensordb.type_defs import Backend
+from tensordb.utils.naming import check_name_valid
 
 
 class Collection:
@@ -29,15 +30,16 @@ class Collection:
         self.__backend = backend
 
         if fields is not None:
-            self.__backend.create_collection(name, fields)
+            create_collection(name, fields, self.__backend)
         else:
-            assert self.__backend.collection_exists(name), f"Collection {name} does not exist"
+            assert collection_exists(name, self.__backend.cursor()), f"Collection {name} does not exist"
 
         self.__name = name
 
     @property
     def fields(self) -> dict[str, Type | Field]:
-        return self.__backend.get_collection_fields(self.__name)
+        """The fields of the collection."""
+        return get_collection_fields(self.__name, self.__backend.cursor())
 
     @property
     def name(self) -> str:
@@ -53,4 +55,17 @@ class Collection:
         if isinstance(data, dict):
             data = [data]
 
-        self.__backend.insert_data(self.__name, data)
+        cursor = self.__backend.cursor()
+        insert_data(self.__name, data, cursor)
+        self.__backend.commit()
+
+    def query(self, query: dict) -> list[dict[str, Any]]:
+        """Query the collection.
+
+        Args:
+            query: The query to execute.
+
+        Returns:
+            The results of the query.
+        """
+        pass

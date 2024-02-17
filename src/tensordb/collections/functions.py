@@ -1,12 +1,86 @@
 import sqlite3
-from typing import Type
+from typing import Any, Type
 
 import msgpack
 import numpy as np
 
-from tensordb._backend.sql_types import TYPE_TO_SQL_TYPE
-from tensordb._config import CONFIG
+from tensordb.config import CONFIG
 from tensordb.fields import Field, TensorField
+from tensordb.type_defs import Backend
+from tensordb.utils.naming import check_name_valid
+from tensordb.utils.sqlite import SQL_TYPE_TO_TYPE, TYPE_TO_SQL_TYPE, get_table_fields
+
+
+def get_collection_fields(name: str, cursor: sqlite3.Cursor) -> dict[str, Type | Field]:
+    """Get the fields of a collection.
+
+    Args:
+        name: The name of the collection.
+        cursor: The cursor to use to execute the command.
+
+    Returns:
+        fields: Mapping from field name to field type.
+    """
+    tensor_fields = get_collection_tensor_fields(name, cursor)
+
+    all_fields = get_table_fields(name, cursor)
+
+    for key, value in all_fields.items():
+        all_fields[key] = SQL_TYPE_TO_TYPE[value]
+
+    all_fields.update(tensor_fields)
+
+    return all_fields
+
+
+def collection_exists(name: str, cursor: sqlite3.Cursor) -> bool:
+    """Check if a collection exists.
+
+    Args:
+        name: The name of the collection.
+        cursor: The cursor to use to execute the command.
+
+    Returns:
+        exists: Whether the collection exists.
+    """
+    cursor.execute(
+        f"""
+        select * from {CONFIG.reserved_table_names.collections}
+        where name = ?
+    """,
+        (name,),
+    )
+
+    result = cursor.fetchall()
+    return len(result) > 0
+
+
+def create_collection(name, fields: dict[str, Type | Field], backend: Backend) -> None:
+    """Create a new collection.
+
+    Args:
+        name: The name of the collection.
+        fields: Mapping from field name to field type.
+        backend: The backend to use.
+    """
+    assert check_name_valid(name), f"{name} is not a valid collection name"
+
+    for field_name in fields.keys():
+        assert check_name_valid(field_name), f"{field_name} is not a valid field name"
+
+    if "id" in fields:
+        raise ValueError("id is a reserved field name")
+
+    cursor = backend.cursor()
+
+    if collection_exists(name, cursor):
+        raise ValueError(f"Collection {name} already exists")
+
+    create_collection_table(name, fields, cursor)
+    collection_id = insert_collection(name, cursor)
+    insert_collection_fields(collection_id, fields, cursor)
+
+    backend.commit()
 
 
 def create_collection_table(name: str, fields: dict[str, Type | Field], cursor: sqlite3.Cursor) -> None:
@@ -97,29 +171,16 @@ def insert_collection_fields(
             )
 
 
-def collection_exists(name: str, cursor: sqlite3.Cursor) -> bool:
-    """Check if a collection exists.
+def get_collection_tensor_fields(collection_name: str, cursor: sqlite3.Cursor) -> dict[str, TensorField]:
+    """Get the tensor fields of a collection.
 
     Args:
-        name: The name of the collection.
+        collection_name: The name of the collection.
         cursor: The cursor to use to execute the command.
 
     Returns:
-        exists: Whether the collection exists.
+        tensor_fields: Mapping from field name to tensor field.
     """
-    cursor.execute(
-        f"""
-        select * from {CONFIG.reserved_table_names.collections}
-        where name = ?
-    """,
-        (name,),
-    )
-
-    result = cursor.fetchall()
-    return len(result) > 0
-
-
-def get_collection_tensor_fields(collection_name: str, cursor: sqlite3.Cursor) -> dict[str, TensorField]:
     cursor.execute(
         f"""
         select
@@ -141,3 +202,28 @@ def get_collection_tensor_fields(collection_name: str, cursor: sqlite3.Cursor) -
         tensor_fields[field_name] = TensorField(dtype=np.dtype(dtype), shape=tuple(msgpack.unpackb(shape)))
 
     return tensor_fields
+
+
+def insert_data(collection_name: str, data: list[dict[str, Any]], cursor: sqlite3.Cursor) -> None:
+    """Insert data into the collection.
+
+    Args:
+        collection_name: The name of the collection.
+        data: The data to insert.
+        cursor: The cursor to use to execute the command.
+    """
+    fields = get_collection_fields(collection_name, cursor)
+    fields.pop("id")
+
+    for row in data:
+        assert set(row.keys()) == set(fields.keys()), f"Row {row} does not have the correct fields"
+
+        values = [row[field_name] for field_name in fields.keys()]
+
+        cursor.execute(
+            f"""
+            insert into {collection_name} ({", ".join(fields.keys())})
+            values ({", ".join(["?"] * len(fields))})
+        """,
+            values,
+        )

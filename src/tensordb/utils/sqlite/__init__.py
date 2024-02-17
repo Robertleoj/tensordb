@@ -1,5 +1,13 @@
 import sqlite3
 
+TYPE_TO_SQL_TYPE = {
+    int: "INTEGER",
+    float: "REAL",
+    str: "TEXT",
+}
+
+SQL_TYPE_TO_TYPE = {value: key for key, value in TYPE_TO_SQL_TYPE.items()}
+
 
 def get_table_fields(table_name: str, cursor: sqlite3.Cursor) -> dict[str, str]:
     """Get the fields of a table.
