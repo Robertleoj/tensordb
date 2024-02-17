@@ -43,7 +43,7 @@ my_collection = db.collection(
     }
 )
 ```
-An ID column named `id` is automatically created, with a unique identifier for each row. 
+An ID column named `id` is automatically created, with a unique identifier for each row.
 
 To get the collection later, you can invoke the same method without the `fields` argument:
 ```python
