@@ -18,31 +18,41 @@
 import shutil
 from pathlib import Path
 
-import numpy as np
 from tensordb import Database
-from tensordb.fields import TensorField
 
 # %%
 p = Path("../data")
-shutil.rmtree(str(p))
+shutil.rmtree(str(p), ignore_errors=True)
 p.mkdir(exist_ok=True)
 
 # %%
 db = Database("test_db", p)
 
 # %%
-fields = {"name": str, "number": int, "tensor": TensorField(dtype=np.int32, shape=(None, 2))}
+db.collections()
+
+# %%
+fields = {"name": str, "number": int}
 
 # %%
 coll = db.collection("test", fields=fields)
 
 # %%
-recovered = coll.fields
+coll.insert({"name": "Boi", "number": 7})
 
 # %%
-recovered.pop("id")
+coll.find().execute()
 
 # %%
+coll.insert(
+    [
+        {"name": "Eva", "number": 42},
+        {"name": "Bob", "number": 420},
+    ]
+)
 
 # %%
-fields == recovered
+coll.find({"number": 42}).execute()
+
+# %%
+db.collections()

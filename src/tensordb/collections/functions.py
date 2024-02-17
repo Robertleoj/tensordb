@@ -1,12 +1,12 @@
 import sqlite3
-from typing import Any, Type
+from typing import Type
 
 import msgpack
 import numpy as np
 
+from tensordb.backend import Backend
 from tensordb.config import CONFIG
 from tensordb.fields import Field, TensorField
-from tensordb.type_defs import Backend
 from tensordb.utils.naming import check_name_valid
 from tensordb.utils.sqlite import SQL_TYPE_TO_TYPE, TYPE_TO_SQL_TYPE, get_table_fields
 
@@ -202,28 +202,3 @@ def get_collection_tensor_fields(collection_name: str, cursor: sqlite3.Cursor) -
         tensor_fields[field_name] = TensorField(dtype=np.dtype(dtype), shape=tuple(msgpack.unpackb(shape)))
 
     return tensor_fields
-
-
-def insert_data(collection_name: str, data: list[dict[str, Any]], cursor: sqlite3.Cursor) -> None:
-    """Insert data into the collection.
-
-    Args:
-        collection_name: The name of the collection.
-        data: The data to insert.
-        cursor: The cursor to use to execute the command.
-    """
-    fields = get_collection_fields(collection_name, cursor)
-    fields.pop("id")
-
-    for row in data:
-        assert set(row.keys()) == set(fields.keys()), f"Row {row} does not have the correct fields"
-
-        values = [row[field_name] for field_name in fields.keys()]
-
-        cursor.execute(
-            f"""
-            insert into {collection_name} ({", ".join(fields.keys())})
-            values ({", ".join(["?"] * len(fields))})
-        """,
-            values,
-        )

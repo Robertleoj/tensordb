@@ -70,10 +70,10 @@ my_collection.insert([
 
 ### Querying data
 
-You can query the collection using the `query` method. The query is a dictionary with keys corresponding to the fields in the collection, and values corresponding to the values you want to match.
+You can query the collection using the `find` method. The `query` parameter is a dictionary with keys corresponding to the fields in the collection, and values corresponding to the values you want to match.
 
 ```python
-result = my_collection.query({"name": "first"})
+result = my_collection.find({"name": "first"}).execute()
 
 ```
 

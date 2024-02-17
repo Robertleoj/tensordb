@@ -1,8 +1,10 @@
 from typing import Any, Type
 
-from tensordb.collections.functions import collection_exists, create_collection, get_collection_fields, insert_data
+from tensordb.backend import Backend
+from tensordb.collections.functions import collection_exists, create_collection, get_collection_fields
+from tensordb.collections.insert import insert_data
+from tensordb.collections.query import Query
 from tensordb.fields import Field
-from tensordb.type_defs import Backend
 from tensordb.utils.naming import check_name_valid
 
 
@@ -59,7 +61,7 @@ class Collection:
         insert_data(self.__name, data, cursor)
         self.__backend.commit()
 
-    def query(self, query: dict) -> list[dict[str, Any]]:
+    def find(self, query: dict | None = None) -> Query:
         """Query the collection.
 
         Args:
@@ -68,4 +70,4 @@ class Collection:
         Returns:
             The results of the query.
         """
-        pass
+        return Query(collection_name=self.__name, query=query, backend=self.__backend)

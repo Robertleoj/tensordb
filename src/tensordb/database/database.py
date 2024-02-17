@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from typing import Type
 
+from tensordb.backend import Backend, get_backend
 from tensordb.collections import Collection
 from tensordb.config import CONFIG
 from tensordb.database.functions import (
@@ -11,7 +12,6 @@ from tensordb.database.functions import (
 )
 from tensordb.database.paths import get_database_path
 from tensordb.fields import Field
-from tensordb.type_defs import Backend, get_backend
 from tensordb.utils.naming import check_name_valid
 
 logger = logging.getLogger(__name__)
