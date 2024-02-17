@@ -1,5 +1,7 @@
 # TensorDB
 
+**NOTE**: Still a work in progress, a lot of functionality is not yet implemented.
+
 TensorDB is a lightweight local database for storing and querying tensors.
 
 
