@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Any, Type
 
 from tensordb._backend import Backend
 from tensordb._utils.naming import check_name_valid
@@ -43,3 +43,14 @@ class Collection:
     def name(self) -> str:
         """The name of the collection."""
         return self.__name
+
+    def insert(self, data: dict[str, Any] | list[dict[str, Any]]) -> None:
+        """Insert data into the collection.
+
+        Args:
+            data: The data to insert.
+        """
+        if isinstance(data, dict):
+            data = [data]
+
+        self.__backend.insert_data(self.__name, data)
