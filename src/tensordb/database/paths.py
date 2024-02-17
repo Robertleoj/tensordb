@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from tensordb._utils.paths import get_persistent_data_path
+from tensordb.utils.paths import get_persistent_data_path
 
 
 def get_database_root_path() -> Path:

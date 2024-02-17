@@ -1,4 +1,4 @@
-#include "../../../include/_tensordb_cpp/example.hpp"
+#include "../../../include/tensordb_cpp/example.hpp"
 
 namespace tensordb_cpp {
 

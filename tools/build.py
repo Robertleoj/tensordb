@@ -14,7 +14,7 @@ from generate_config import build_config
 BUILD_DIR = "build"
 
 PACKAGE_NAME = "tensordb"
-CPP_PACKAGE_NAME = "_tensordb_cpp"
+CPP_PACKAGE_NAME = "tensordb_cpp"
 MODULE_NAME = f"{CPP_PACKAGE_NAME}.cpython-310-x86_64-linux-gnu.so"
 
 

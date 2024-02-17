@@ -1,8 +1,8 @@
 from dataclasses import asdict
 
 import toml
-from tensordb._config import CONFIG
-from tensordb._utils.paths import get_package_root
+from tensordb.config import CONFIG
+from tensordb.utils.paths import get_package_root
 
 
 def test_global_config() -> None:

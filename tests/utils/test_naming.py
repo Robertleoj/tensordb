@@ -1,4 +1,4 @@
-from tensordb._utils.naming import check_name_valid
+from tensordb.utils.naming import check_name_valid
 
 
 def test_check_name_valid() -> None:  # noqa: D103

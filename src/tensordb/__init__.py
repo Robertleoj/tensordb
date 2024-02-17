@@ -1,3 +1,3 @@
-from tensordb._database import Database
+from tensordb.database import Database
 
 __all__ = ["Database"]

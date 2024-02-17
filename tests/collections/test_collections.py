@@ -32,3 +32,13 @@ def test_make_id_column(tmp_path: Path) -> None:  # noqa: D103
 
     with pytest.raises(ValueError):
         db.collection("test", fields={"id": int})
+
+
+def test_insert_basic_types(tmp_path: Path) -> None:  # noqa: D103
+    db = Database("test_db", tmp_path)
+
+    collection = db.collection("test", fields={"field1": int, "field2": str})
+
+    collection.insert({"field1": 1, "field2": "test"})
+
+    collection.insert([{"field1": 2, "field2": "test2"}, {"field1": 3, "field2": "test3"}])

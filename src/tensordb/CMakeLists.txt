@@ -1,1 +1,1 @@
-add_subdirectory(_tensordb_cpp)
+add_subdirectory(tensordb_cpp)

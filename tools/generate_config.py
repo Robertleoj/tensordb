@@ -115,7 +115,7 @@ def build_config() -> None:
     make_cpp_config(
         config_path=config_path,
         hpp_template_path=Path("jinja_templates/config/config.hpp.j2"),
-        hpp_destination_path=Path("include/_tensordb_cpp/config.hpp"),
+        hpp_destination_path=Path("include/tensordb_cpp/config.hpp"),
     )
 
 
